@@ -15,9 +15,9 @@ export class ForwardPlusRenderer extends renderer.Renderer {
     private bundle?: GPURenderBundle;
     private cpuTimer: CpuTimer;
 
-    constructor(stage: Stage, useBundles = false) {
-        super(stage, useBundles ? 'forward+ bundles' : 'forward+', ['clustering', 'render']);
-        this.cpuTimer = new CpuTimer(useBundles ? 'forward+ bundles' : 'forward+');
+    constructor(stage: Stage, useBundles = false, debugClusters = false) {
+        super(stage, debugClusters ? 'cluster debug' : (useBundles ? 'forward+ bundles' : 'forward+'), ['clustering', 'render']);
+        this.cpuTimer = new CpuTimer(debugClusters ? 'cluster debug' : (useBundles ? 'forward+ bundles' : 'forward+'));
 
         this.sceneUniformsBindGroupLayout = renderer.device.createBindGroupLayout({
             label: "forward+ scene bind group layout",
@@ -99,6 +99,7 @@ export class ForwardPlusRenderer extends renderer.Renderer {
                     code: shaders.forwardPlusFragSrc
                 }),
                 entryPoint: "main",
+                constants: { debugClusters: debugClusters ? 1 : 0 },
                 targets: [
                     {
                         format: renderer.canvasFormat

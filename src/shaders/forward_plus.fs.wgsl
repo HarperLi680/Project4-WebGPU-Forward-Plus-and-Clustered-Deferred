@@ -1,3 +1,5 @@
+override debugClusters: bool = false;
+
 @group(${bindGroup_scene}) @binding(0) var<uniform> camera: CameraUniforms;
 @group(${bindGroup_scene}) @binding(1) var<storage, read> lightSet: LightSet;
 @group(${bindGroup_scene}) @binding(2) var<storage, read> clusterSet: ClusterSet;
@@ -58,6 +60,23 @@ fn main(in: FragmentInput) -> @location(0) vec4f {
         clusterX +
         clusterY * countX +
         clusterZ * countX * countY;
+
+    if (debugClusters) {
+        // Stored count is capped at 128; overflow is a separate flag.
+        if (clusterSet.clusters[clusterId].overflow != 0u) {
+            return vec4f(1.0, 0.0, 1.0, 1.0);
+        }
+        let count = clusterSet.clusters[clusterId].numLights;
+        let t = clamp(f32(count) / f32(${maxLightsPerCluster}), 0.0, 1.0);
+        let blue = vec3f(0.0, 0.0, 1.0);
+        let cyan = vec3f(0.0, 1.0, 1.0);
+        let yellow = vec3f(1.0, 1.0, 0.0);
+        let red = vec3f(1.0, 0.0, 0.0);
+        var color = mix(blue, cyan, clamp(t * 3.0, 0.0, 1.0));
+        color = mix(color, yellow, clamp(t * 3.0 - 1.0, 0.0, 1.0));
+        color = mix(color, red, clamp(t * 3.0 - 2.0, 0.0, 1.0));
+        return vec4f(color, 1.0);
+    }
 
     let normal = normalize(in.nor);
     var totalLightContrib = vec3f(0.0);
